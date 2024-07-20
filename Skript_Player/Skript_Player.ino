@@ -21,7 +21,7 @@ const int switchPin = D3;
 const char* ssid = "yourSSID";
 const char* password = "yourPASSWORD";
 
-// AP-Settigs
+// AP-Settings 
 const char* ap_ssid = "ESP_AP";
 const char* ap_password = "configportal";
 
@@ -65,6 +65,73 @@ void setup() {
     isAPMode = false;
   }
 
+  server.on("/", handleRoot);
+  server.on("/play", handlePlay);
+  server.on("/pause", handlePause);
+  server.on("/stop", handleStop);
+  server.on("/next", handleNext);
+  server.on("/previous", handlePrevious);
+  server.on("/title", handleTitle);
+
+  server.begin();
+  Serial.println("HTTP server started");
+
+  updateLCD();
+}
+
+void loop() {
+  server.handleClient();
+}
+
+void handleRoot() {
+  String html = "<html><body>";
+  html += "<h1>ESP8266 MP3 Player</h1>";
+  html += "<p><a href='/play'>Play</a></p>";
+  html += "<p><a href='/pause'>Pause</a></p>";
+  html += "<p><a href='/stop'>Stop</a></p>";
+  html += "<p><a href='/next'>Next</a></p>";
+  html += "<p><a href='/previous'>Previous</a></p>";
+  html += "<p>Current Title: <a href='/title'>Show</a></p>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handlePlay() {
+  myDFPlayer.start();
+  server.send(200, "text/plain", "Play");
+}
+
+void handlePause() {
+  myDFPlayer.pause();
+  server.send(200, "text/plain", "Pause");
+}
+
+void handleStop() {
+  myDFPlayer.stop();
+  server.send(200, "text/plain", "Stop");
+}
+
+void handleNext() {
+  myDFPlayer.next();
+  server.send(200, "text/plain", "Next");
+}
+
+void handlePrevious() {
+  myDFPlayer.previous();
+  server.send(200, "text/plain", "Previous");
+}
+
+void handleTitle() {
+  String title = getMP3Title();
+  server.send(200, "text/plain", title);
+}
+
+String getMP3Title() {
+  int currentFile = myDFPlayer.readCurrentFileNumber();
+  char title[30];
+  sprintf(title, "Titel %d", currentFile);
+  return String(title);
+}
 
 void updateLCD() {
   lcd.clear();
